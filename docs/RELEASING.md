@@ -16,36 +16,43 @@ limitations under the License.
 
 # Release SBOM Verifier
 
-Run these commands from the repository root on the release workstation. Use a supported JDK and the Maven wrapper. CI currently uses Java 21.
+The release tools build, sign, verify, and publish artifacts to Maven Central. Run commands from the repository root with JDK 21 and the Maven Wrapper.
 
-## Prepare locally
+Replace `VERSION` in the commands below with the release version.
 
-1. Verify that the Central Portal account has access to the verified `de.grobmeier` namespace.
-2. Select a valid release signing key that is available on a public keyserver. Use its full primary fingerprint in `RELEASE_SIGNING_KEY`. Unlock the key in the GPG agent.
-3. Run the release checks and sign the files locally:
+## Requirements
 
-   ```sh
-   ./mvnw -B -Prelease -Drevision=0.3.0 -Dgpg.keyname="$RELEASE_SIGNING_KEY" clean verify
-   ```
+- Maven Central Portal access to the `de.grobmeier` namespace.
+- A Central Portal user token.
+- A GPG signing key whose public key is available on a public keyserver.
+- A clean Git checkout at the matching `sbom-verifier-VERSION` tag for publication.
 
-4. Assemble and inspect the local bundle:
+The publication command reads these environment variables:
 
-   ```sh
-   python3 tools/prepare-central-bundle.py --version 0.3.0 --signing-fingerprint "$RELEASE_SIGNING_KEY"
-   unzip -l maven-plugin/target/release/central-bundle.zip
-   ```
+| Variable | Value |
+| --- | --- |
+| `CENTRAL_USERNAME` | Portal token username |
+| `CENTRAL_PASSWORD` | Portal token password |
+| `RELEASE_SIGNING_KEY` | Full primary fingerprint of the signing key |
 
-The helper verifies coordinates, plugin prefix, POM metadata, source/Javadoc contents, and all six signatures. It includes the flattened POM, plugin JAR, sources, Javadoc, and CycloneDX XML/JSON attachments with checksums. The flattened POM has no parent dependency, so the build parent is excluded. This is a local preflight, not Central Portal validation.
+[The Maven settings](maven-release-settings.xml) map the token variables to the `central-sbom-verifier` server ID.
+Keep credentials outside Git and command-line arguments.
 
 ## Unlock the signing key
 
-Verify the full primary fingerprint of the intended release key. On the owner's workstation, the previously validated Maven release key ends in `A5CC90DB`. Its identity differs from the Git commit signing key. Confirm current key configuration rather than selecting a key only because it signed a previous commit.
+List the available signing keys:
 
 ```sh
-gpg --fingerprint A5CC90DB
+gpg --list-secret-keys --keyid-format long
 ```
 
-Set `RELEASE_SIGNING_KEY` to that full primary fingerprint in the release shell. To unlock it through the GPG agent, run this harmless signing check in Terminal:
+Set `RELEASE_SIGNING_KEY` to the full primary fingerprint of the selected key. Confirm its identity:
+
+```sh
+gpg --fingerprint "$RELEASE_SIGNING_KEY"
+```
+
+Run a signing check through the GPG agent:
 
 ```sh
 export GPG_TTY=$(tty)
@@ -54,52 +61,57 @@ printf 'SBOM Verifier release signing check\n' |
   > /tmp/sbom-verifier-signing-check.asc
 ```
 
-Enter a passphrase or hardware-key PIN only in the GPG prompt. Do not put it in chat, Git, or command arguments. The command can succeed without a prompt if the agent or keychain already has access. The agent cache can expire; successful signing now does not guarantee later access. Do not change the key's passphrase to make automation work.
+Enter the passphrase or hardware-key PIN in the GPG prompt. The agent cache can expire between commands.
 
-## Automatic Maven upload and publication
+## Verify release artifacts locally
 
-The `central-upload` profile follows the JJSON publication pattern: upload the Maven-built bundle, publish it after Central validation, and wait for the `published` result. No manual ZIP upload or Portal Publish click is required for this path.
-
-Ordinary `release` builds keep upload disabled and automatic publication false. Publication requires both `release` and `central-upload` profiles. Preparing or merging this configuration does not authorize a release invocation.
-
-Use a Central Portal user token in the release workstation environment:
-
-- `CENTRAL_USERNAME`: the Portal token username.
-- `CENTRAL_PASSWORD`: the Portal token password.
-- `RELEASE_SIGNING_KEY`: the full primary fingerprint of the unlocked, publicly available release signing key.
-
-`docs/maven-release-settings.xml` maps those variables to the dedicated `central-sbom-verifier` server ID. It contains no credentials and does not modify the workstation's private Maven settings. Legacy OSSRH credentials do not establish current Portal access. Do not put actual token values in Git or command-line arguments.
-
-Inspect the release command without invoking Maven or uploading files:
+Run tests and build signed artifacts:
 
 ```sh
-python3 tools/release-to-central.py --dry-run 0.3.0
+./mvnw -B -Prelease -Drevision=VERSION -Dgpg.keyname="$RELEASE_SIGNING_KEY" clean verify
 ```
 
-After the exact source revision passes CI, approve the release notes and create the tag `sbom-verifier-0.3.0` at that revision. After explicit authorization to upload and publish, run:
+Assemble and inspect the bundle:
 
 ```sh
-python3 tools/release-to-central.py 0.3.0
+python3 tools/prepare-central-bundle.py --version VERSION --signing-fingerprint "$RELEASE_SIGNING_KEY"
+unzip -l maven-plugin/target/release/central-bundle.zip
 ```
 
-The command requires a clean checkout at the matching tag and the three environment variables. It invokes Maven with `release,central-upload`, the exact release version, explicit signing key, and dedicated settings. Maven performs `clean deploy`, signs the artifacts, uploads, validates, publishes, and waits for publication. Credentials are passed through the environment. The upload path must be exercised only after release authorization; configuration and non-publishing checks do not prove successful Central authentication or publication.
+The bundle tool verifies coordinates, the goal prefix, POM metadata, source/Javadoc contents, and six signatures.
+The bundle contains the flattened POM, plugin JAR, sources, Javadoc, and CycloneDX XML/JSON attachments with checksums.
+The flattened POM has no parent dependency. The build parent is excluded from publication.
 
-No workflow publishes on push, merge, or tag creation. The release preflight workflow only runs tests and release-profile verification with signing skipped.
+This check verifies the local bundle. Maven Central performs its own validation during publication.
 
-## Guava alert disposition
+## Publish to Maven Central
 
-Dependabot alert #1 (CVE-2026-102554 / GHSA-xxph-c9ww-hj94) concerns Guava native Java deserialization. Static review found no native Java object-stream deserialization in the plugin's production sources; the inspected SBOM entrypoint uses CycloneDX XML/JSON parsers. The affected Guava appears through the `provided` Maven core API baseline. The executing Maven distribution controls the actual host version.
+The `release` profile builds signed artifacts. The `central-upload` profile enables automatic upload and publication through the Central publisher.
+Both profiles are required for publication.
 
-The verdict is **needs review**, with medium confidence. No exploitable path in this plugin was confirmed, and host/extension deserialization paths were not fully reviewed. Keep the alert open. Do not claim that the dependency is fixed or dismiss the alert as a false positive. Updating only a provided dependency cannot update the Maven host. Review the Maven distribution used for release and track upstream fixes. This disposition records the current evidence and its limits; it is not an exploit test.
+Inspect the publication command without running Maven:
 
-## Release gates
+```sh
+python3 tools/release-to-central.py --dry-run VERSION
+```
 
-- Review and commit preparation. Run CI on the exact final commit.
-- Review the advisory disposition above and select the final release revision.
-- Approve the notes and tag that revision. Rebuild from the exact tagged source.
-- Obtain explicit authorization before invoking the uploading release command. Central publication is immutable.
-- Confirm that Maven reports publication, then resolve the coordinates from a clean repository.
-- Update consumer profiles and the website to `0.3.0`, then advance development to the next snapshot.
+Publish from a clean checkout at the matching `sbom-verifier-VERSION` tag:
+
+```sh
+python3 tools/release-to-central.py VERSION
+```
+
+The command checks the tag, working tree, and required environment variables.
+It invokes Maven with the release version, signing key, dedicated settings, and `release,central-upload` profiles.
+Maven signs the artifacts, uploads the bundle, waits for Central validation, and publishes it automatically.
+The command waits for the published result.
+
+Pushes, merges, and tag creation do not invoke publication. The release-preflight workflow runs tests and release-profile verification with signing skipped.
+
+## Verify publication
+
+Confirm that Maven reports publication. Resolve the published coordinates from a clean Maven repository.
+Maven Central release versions are immutable.
 
 ## References
 

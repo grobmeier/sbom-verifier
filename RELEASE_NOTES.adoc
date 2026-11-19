@@ -16,7 +16,7 @@ limitations under the License.
 
 = SBOM Verifier 0.3.0
 
-Status: published to Maven Central on 9 November 2026.
+Published to Maven Central on 9 November 2026.
 
 == Coordinates and migration
 
@@ -31,12 +31,10 @@ Java extensions must update imports from `io.github.sbom.enforcer` to
 * Add `requireSbom` to fail when the current module has no attached supported SBOM. Its default is `false`.
 * Distinguish unavailable references from broken references. HTTP 429, HTTP 5xx, and connection failures warn by default. Set `failOnUnavailable=true` for strict handling. Dependency findings also require `failOnDependencies=true`.
 * Report reference checks skipped after the per-host connection failure limit.
-* Fix Maven 3.9.6 configuration of the private local repository path.
+* Fix Maven 3.9.6 configuration of the isolated local repository path.
 * Correct configuration examples and replace live public URLs in integration tests with deterministic cases.
 
 == Supported scope
 
 The plugin checks attached CycloneDX XML and JSON documents for each Maven module.
 Completeness compares the Maven dependency graph with the SBOM. It does not inspect repackaged archive contents, establish vulnerability status, or establish CRA conformity.
-
-The implementation passed JJSON's full reactor and Time & Bill's packaging/SBOM checks. Time & Bill application tests were skipped.
