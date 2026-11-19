@@ -14,18 +14,26 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ////
 
-= SBOM Verifier 0.3.0
+= SBOM Verifier release notes
+
+== 0.3.1
+
+* Require Maven `3.9.6` or newer in both the plugin POM and descriptor.
+* Reject unsupported Maven versions before rule loading with the required version in the error message.
+* Align the source build requirement with the plugin runtime requirement.
+* Test Maven `3.8.7` and `3.9.5` rejection and all integration builds on Maven `3.9.6` in CI.
+
+== 0.3.0
 
 Published to Maven Central on 9 November 2026.
 
-== Coordinates and migration
+=== Coordinates
 
 The maintained project is named SBOM Verifier. Its coordinates are
 `de.grobmeier:sbom-verifier-maven-plugin:0.3.0` and its goal prefix is `sbom-verifier`.
-Java extensions must update imports from `io.github.sbom.enforcer` to
-`de.grobmeier.sbom.verifier` and recompile. Existing rule names and settings remain unchanged.
+The Java package is `de.grobmeier.sbom.verifier`.
 
-== Changes
+=== Changes
 
 * Add `completeness` to check the project identity and resolved compile/runtime dependency coverage, including transitive dependencies. Provided, test, and system dependencies are excluded. Extra SBOM components are allowed.
 * Add `requireSbom` to fail when the current module has no attached supported SBOM. Its default is `false`.
@@ -34,7 +42,7 @@ Java extensions must update imports from `io.github.sbom.enforcer` to
 * Fix Maven 3.9.6 configuration of the isolated local repository path.
 * Correct configuration examples and replace live public URLs in integration tests with deterministic cases.
 
-== Supported scope
+=== Supported scope
 
 The plugin checks attached CycloneDX XML and JSON documents for each Maven module.
 Completeness compares the Maven dependency graph with the SBOM. It does not inspect repackaged archive contents, establish vulnerability status, or establish CRA conformity.

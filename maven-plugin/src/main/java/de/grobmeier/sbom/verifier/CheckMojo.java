@@ -55,7 +55,7 @@ import org.eclipse.aether.spi.localrepo.LocalRepositoryManagerFactory;
 /**
  * Performs a configurable set of checks on the SBOMs attached to the build.
  * <p>
- *     See <a href="https://grobmeier.solutions/solutions/sbom-enforcer/#what-it-checks">Rules</a> for a list of available rules.
+ *     See <a href="https://github.com/grobmeier/sbom-verifier/blob/main/maven-plugin/src/site/asciidoc/rules.adoc">Rules</a> for a list of available rules.
  * </p>
  */
 @Mojo(
