@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Publish an approved tagged release through Maven Central. Use --dry-run to print the plan."""
+"""Publish a tagged release through Maven Central. Use --dry-run to inspect the Maven command."""
 import argparse
 import os
 from pathlib import Path
@@ -25,7 +25,7 @@ import subprocess
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('version')
-    parser.add_argument('--dry-run', action='store_true', help='Print the release plan without running Maven or uploading files.')
+    parser.add_argument('--dry-run', action='store_true', help='Print the Maven command without running it or uploading files.')
     args = parser.parse_args()
     if not re.fullmatch(r'[0-9]+\.[0-9]+\.[0-9]+', args.version):
         parser.error('Use a release version such as 0.3.0.')
@@ -36,9 +36,9 @@ def main():
                '-Prelease,central-upload', f'-Drevision={args.version}',
                '-Dgpg.keyname=' + (key if not args.dry_run else '<RELEASE_SIGNING_KEY>'), 'clean', 'deploy']
     if args.dry_run:
-        print(f'Require a clean checkout at tag {tag}, reviewed CI, and an unlocked published signing key.')
+        print(f'Require a clean checkout at tag {tag} and an unlocked published signing key.')
         print('Require CENTRAL_USERNAME, CENTRAL_PASSWORD, and RELEASE_SIGNING_KEY in the environment.')
-        print('On an approved invocation, Maven uploads, validates, publishes, and waits for publication.')
+        print('Maven uploads, validates, publishes, and waits for publication.')
         print(shlex.join(command))
         print('Dry run: no Maven command was executed and no files were uploaded.')
         return 0
