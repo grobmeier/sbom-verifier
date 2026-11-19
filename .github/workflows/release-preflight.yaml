@@ -35,4 +35,4 @@ jobs:
       - name: Test release command without upload
         run: PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tools -p 'test_*.py' -v
       - name: Verify release profile without signing or upload
-        run: ./mvnw -B -Prelease -Drevision=0.3.0 -Dgpg.skip=true verify
+        run: ./mvnw -B -Prelease -Drevision=0.3.1 -Dgpg.skip=true verify

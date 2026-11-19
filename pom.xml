@@ -25,7 +25,7 @@
   <packaging>pom</packaging>
 
   <name>SBOM Verifier Parent</name>
-  <url>https://grobmeier.solutions/solutions/sbom-enforcer/</url>
+  <url>https://github.com/grobmeier/sbom-verifier</url>
   <inceptionYear>2025</inceptionYear>
 
   <organization>
@@ -85,23 +85,22 @@
     <site>
       <id>site</id>
       <name>Website</name>
-      <url>https://grobmeier.solutions/solutions/sbom-enforcer/</url>
+      <url>https://github.com/grobmeier/sbom-verifier</url>
     </site>
   </distributionManagement>
 
   <properties>
     <maven.compiler.release>17</maven.compiler.release>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <revision>0.3.0-SNAPSHOT</revision>
+    <revision>0.3.1-SNAPSHOT</revision>
     <!-- Prepare release bundles locally unless upload is explicitly selected. -->
     <central.skipUpload>true</central.skipUpload>
     <central.publishingServerId>central-sbom-verifier</central.publishingServerId>
     <central.autoPublish>false</central.autoPublish>
     <central.waitUntil>validated</central.waitUntil>
 
-    <!-- `bnd-maven-plugin` 7.x requires a Maven version `3.8.1` or higher -->
     <javaBuildVersion>17</javaBuildVersion>
-    <minimalMavenBuildVersion>3.8.1</minimalMavenBuildVersion>
+    <minimumMavenVersion>3.9.6</minimumMavenVersion>
 
     <!-- Enable reproducible builds -->
     <project.build.outputTimestamp>2025-04-28T16:59:43Z</project.build.outputTimestamp>
@@ -618,7 +617,8 @@
                   <version>${javaBuildVersion}</version>
                 </requireJavaVersion>
                 <requireMavenVersion>
-                  <version>${minimalMavenBuildVersion}</version>
+                  <version>${minimumMavenVersion}</version>
+                  <message>SBOM Verifier requires Maven ${minimumMavenVersion} or newer. Use an updated Maven installation or the Maven Wrapper.</message>
                 </requireMavenVersion>
                 <RestrictImports>
                   <reason>Expand all wildcard imports</reason>
@@ -770,7 +770,7 @@
         <artifactId>maven-site-plugin</artifactId>
         <version>${maven-site-plugin.version}</version>
         <configuration>
-          <topSiteURL>https://grobmeier.solutions/solutions/sbom-enforcer/</topSiteURL>
+          <topSiteURL>https://github.com/grobmeier/sbom-verifier</topSiteURL>
         </configuration>
         <dependencies>
           <dependency>

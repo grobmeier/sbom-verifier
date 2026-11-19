@@ -31,7 +31,8 @@ This guide describes local builds and verification. See [RELEASING.md](RELEASING
 
 ## Build requirements
 
-Use JDK 21 to match CI. The source targets Java 17. The Maven Wrapper selects Maven 3.9.9.
+Use JDK 21 to match CI. The source targets Java 17. Builds and plugin execution require Maven 3.9.6 or newer.
+The Maven Wrapper selects Maven 3.9.9.
 Python 3 and Git are required for the release-command tests. GPG is required for artifact signing.
 
 Run verification from the repository root:
@@ -48,6 +49,20 @@ Install the source build in the local Maven repository:
 ```
 
 The `revision` property in `pom.xml` defines the source version. The `install` goal writes to the local Maven repository.
+
+## Maven compatibility checks
+
+The Maven runtime workflow tests the installed plugin POM and descriptor. Both must declare Maven 3.9.6 as the minimum.
+Maven 3.8.7 and 3.9.5 must reject the plugin before rule loading. Maven 3.9.6 must execute the configured rule.
+The workflow also runs all Maven integration builds with Maven 3.9.6. The standard build uses the Maven 3.9.9 wrapper.
+
+To repeat a runtime check, install the source build first. Replace `MAVEN_HOME` with the distribution directory:
+
+```sh
+python3 tools/verify-maven-runtime.py --maven-home MAVEN_HOME --expect unsupported
+```
+
+Use `--expect supported` for Maven 3.9.6 or newer.
 
 ## Source map
 
@@ -87,7 +102,8 @@ Completeness compares the Maven dependency graph with the SBOM. It does not insp
 | No verifier output | Check the plugin execution and confirm that the build reaches `verify` |
 | No SBOM attached | Check generator execution order and `skipNotDeployed` |
 | Duplicate SBOM generation | Check inherited CycloneDX executions |
-| Rule-loading error with an older Maven distribution | Use the Maven Wrapper, which selects Maven 3.9.9 |
+| Plugin requires Maven version 3.9.6 | Upgrade Maven or use a Maven Wrapper that selects version 3.9.6 or newer |
+| Rule-loading error with release 0.3.0 on older Maven | Upgrade Maven to version 3.9.6 or newer |
 | GPG signing fails | Follow the [signing-key procedure](RELEASING.md#unlock-the-signing-key) |
 | Central authentication fails | Check the Portal token variables and the dedicated Maven settings |
 
