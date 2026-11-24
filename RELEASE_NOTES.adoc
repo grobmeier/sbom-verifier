@@ -18,6 +18,8 @@ limitations under the License.
 
 == 0.3.1
 
+Published to Maven Central on 24 November 2026.
+
 * Require Maven `3.9.6` or newer in both the plugin POM and descriptor.
 * Reject unsupported Maven versions before rule loading with the required version in the error message.
 * Align the source build requirement with the plugin runtime requirement.

@@ -30,7 +30,7 @@ See link:maven-plugin/src/site/asciidoc/rules.adoc[the current rule reference].
 
 == Published release
 
-Version `0.3.0` is available from https://repo.maven.apache.org/maven2/de/grobmeier/sbom-verifier-maven-plugin/0.3.0/[Maven Central]. It includes completeness checking and reference-availability handling. Maven downloads the plugin when you use the configuration below. No local source installation is required.
+Version `0.3.1` is available from https://repo.maven.apache.org/maven2/de/grobmeier/sbom-verifier-maven-plugin/0.3.1/[Maven Central]. It checks dependency coverage and reports the Maven version requirement before rule loading. Maven downloads the plugin when you use the configuration below. No local source installation is required.
 
 See link:RELEASE_NOTES.adoc[the release notes] for release details.
 
@@ -55,7 +55,7 @@ Add both plugins under `<build><plugins>` in each module you want to check. Cycl
 <plugin>
   <groupId>de.grobmeier</groupId>
   <artifactId>sbom-verifier-maven-plugin</artifactId>
-  <version>0.3.0</version>
+  <version>0.3.1</version>
   <executions>
     <execution>
       <id>check-sbom</id>
@@ -87,20 +87,17 @@ Integration tests cover missing SBOMs and omitted dependencies.
 
 == Runtime requirements
 
-The `0.3.1-SNAPSHOT` source build requires Maven `3.9.6` or newer and Java `17` or newer.
+SBOM Verifier requires Maven `3.9.6` or newer and Java `17` or newer.
 It declares the Maven minimum in the plugin POM. Older Maven versions stop before rule loading with this error:
 
 [source,text]
 ----
-The plugin de.grobmeier:sbom-verifier-maven-plugin:0.3.1-SNAPSHOT requires Maven version 3.9.6
+The plugin de.grobmeier:sbom-verifier-maven-plugin:0.3.1 requires Maven version 3.9.6
 ----
 
 Run `mvn --version` to check your installation. Upgrade Maven if it is older than `3.9.6`.
 If your project has a Maven Wrapper, run `./mvnw --version` and confirm that it selects a supported version.
 On Windows, use `mvnw.cmd --version`.
-
-The published `0.3.0` release also needs Maven `3.9.6` or newer for rule loading.
-On older Maven versions, it reports `NoSuchElementException` instead of a version requirement.
 
 == Development and releases
 
